@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: pricetracker-postgres
+    environment:
+      POSTGRES_USER: pricetracker
+      POSTGRES_PASSWORD: pricetracker
+      POSTGRES_DB: pricetracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pricetracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for Celery broker + cache)
+  redis:
+    image: redis:7-alpine
+    container_name: pricetracker-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pricetracker-api
+    environment:
+      DATABASE_URL: postgresql://pricetracker:pricetracker@postgres:5432/pricetracker
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # Celery Worker
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pricetracker-worker
+    environment:
+      DATABASE_URL: postgresql://pricetracker:pricetracker@postgres:5432/pricetracker
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: celery -A app.workers.celery_app worker --loglevel=info
+
+  # Celery Beat Scheduler
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pricetracker-beat
+    environment:
+      DATABASE_URL: postgresql://pricetracker:pricetracker@postgres:5432/pricetracker
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    command: celery -A app.workers.celery_app beat --loglevel=info
+
+volumes:
+  postgres_data:
+  redis_data:
