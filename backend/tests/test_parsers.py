@@ -27,6 +27,7 @@ class TestAmazonParser:
         parser = AmazonParser()
         assert "amazon.fr" in parser.supported_domains
         assert "amazon.be" in parser.supported_domains
+        assert "amazon.com.be" in parser.supported_domains
 
     def test_requires_javascript(self):
         """Test that Amazon requires JavaScript."""
@@ -39,6 +40,7 @@ class TestAmazonParser:
         assert parser.validate_url("https://www.amazon.fr/dp/B09XS7JWHH") is True
         assert parser.validate_url("https://amazon.fr/product/test") is True
         assert parser.validate_url("https://www.amazon.be/dp/B09XS7JWHH") is True
+        assert parser.validate_url("https://www.amazon.com.be/dp/B0CG19FGQ5") is True
 
     def test_validate_url_invalid(self):
         """Test URL validation with invalid URLs."""

@@ -13,6 +13,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi.testclient import TestClient
 from typing import Generator
+from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.core.database import Base, get_db
@@ -39,9 +40,10 @@ def test_db() -> Generator[Session, None, None]:
     """
     # Create in-memory SQLite database with check_same_thread=False for TestClient
     engine = create_engine(
-        "sqlite:///:memory:",
+        "sqlite://",
         echo=False,
-        connect_args={"check_same_thread": False}
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
     # Create all tables
@@ -91,7 +93,7 @@ def sample_product(test_db: Session) -> Product:
         domain="amazon.fr",
         current_price=349.99,
         currency="EUR",
-        target_price=299.99,
+        target_price=None,
         image_url="https://m.media-amazon.com/images/I/test.jpg",
         check_frequency_hours=24,
         status=ProductStatus.ACTIVE,
@@ -216,9 +218,16 @@ def product_with_alerts(test_db: Session) -> Product:
     ]
 
     for i, alert_data in enumerate(alerts_data):
+        read_at = None
+        if alert_data["status"] != AlertStatus.READ:
+            read_at = None
+        else:
+            read_at = datetime.utcnow() - timedelta(hours=i)
+
         alert = Alert(
             product_id=product.id,
             created_at=datetime.utcnow() - timedelta(hours=i),
+            read_at=read_at,
             **alert_data,
         )
         test_db.add(alert)

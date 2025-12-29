@@ -386,18 +386,9 @@ def test_anti_spam_allows_alert_after_24h(test_db: Session, sample_product: Prod
     create_price_history_entry(test_db, sample_product.id, price=85.00, days_ago=2)
     alerts_1 = check_and_create_alerts(test_db, sample_product, 85.00, is_promo=False)
 
-    # Manually create alert with old timestamp (>24h ago) to simulate passage of time
-    old_alert = Alert(
-        product_id=sample_product.id,
-        type=AlertType.PRICE_DROP,
-        status=AlertStatus.UNREAD,
-        old_price=100.00,
-        new_price=85.00,
-        price_drop_percentage=15.0,
-        message="Old alert",
-        created_at=datetime.utcnow() - timedelta(hours=25),  # > 24 hours ago
-    )
-    test_db.add(old_alert)
+    # Simulate passage of time by aging the existing alert beyond 24h
+    assert alerts_1, "Expected initial alert to be created"
+    alerts_1[0].created_at = datetime.utcnow() - timedelta(hours=25)
     test_db.commit()
 
     # Act 2: Another price drop after 24 hours (should create new alert)

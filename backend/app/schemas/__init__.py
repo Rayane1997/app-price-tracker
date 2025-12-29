@@ -1,5 +1,6 @@
 from .product import (
     ProductCreate,
+    ProductCreateRequest,
     ProductUpdate,
     ProductResponse,
     ProductList,
@@ -24,6 +25,7 @@ from .promo import (
 
 __all__ = [
     "ProductCreate",
+    "ProductCreateRequest",
     "ProductUpdate",
     "ProductResponse",
     "ProductList",

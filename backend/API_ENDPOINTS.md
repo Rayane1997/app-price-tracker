@@ -54,12 +54,11 @@ Base URL: `http://localhost:8000/api/v1`
 ### 4. Create Product
 **POST** `/api/v1/products/`
 
-**Request Body:** `ProductCreate` schema
+**Request Body:** `ProductCreate`/`ProductCreateRequest` schema (domain optional)
 ```json
 {
   "name": "Product name",
   "url": "https://amazon.fr/product/...",
-  "domain": "amazon.fr",
   "target_price": 39.99,
   "image_url": "https://...",
   "check_frequency_hours": 24,
@@ -72,7 +71,7 @@ Base URL: `http://localhost:8000/api/v1`
 
 **Validations:**
 - URL must start with `http://` or `https://`
-- Domain is extracted automatically from URL
+- Domain is automatically extracted from the URL when omitted and normalized (lowercase, `www.` removed)
 - `name`: 1-500 characters
 - `target_price`: >= 0
 - `check_frequency_hours`: 1-168 (1 week max)

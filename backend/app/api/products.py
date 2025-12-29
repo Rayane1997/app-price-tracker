@@ -5,6 +5,7 @@ from ..core.database import get_db
 from ..core import crud
 from ..schemas.product import (
     ProductCreate,
+    ProductCreateRequest,
     ProductUpdate,
     ProductResponse,
     ProductList,
@@ -74,12 +75,13 @@ def get_product(
 
 @router.post("/", response_model=ProductResponse, status_code=201)
 def create_product(
-    product: ProductCreate,
+    product_payload: ProductCreateRequest,
     db: Session = Depends(get_db),
 ):
     """Create new product"""
     try:
-        return crud.create_product(db, product)
+        validated_product = ProductCreate(**product_payload.model_dump())
+        return crud.create_product(db, validated_product)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

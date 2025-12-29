@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
+from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base
 from app.models import Product, ProductStatus, PriceHistory, Alert, AlertType, AlertStatus
@@ -22,7 +23,12 @@ def test_db() -> Generator[Session, None, None]:
     Each test gets a fresh database.
     """
     # Create in-memory SQLite database
-    engine = create_engine("sqlite:///:memory:", echo=False)
+    engine = create_engine(
+        "sqlite://",
+        echo=False,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
 
     # Create all tables
     Base.metadata.create_all(bind=engine)
@@ -51,7 +57,7 @@ def sample_product(test_db: Session) -> Product:
         domain="amazon.fr",
         current_price=349.99,
         currency="EUR",
-        target_price=299.99,
+        target_price=None,
         image_url="https://m.media-amazon.com/images/I/test.jpg",
         check_frequency_hours=24,
         status=ProductStatus.ACTIVE,

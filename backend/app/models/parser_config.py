@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON, Float
 from datetime import datetime
 from ..core.database import Base
 
@@ -21,7 +21,7 @@ class ParserConfig(Base):
     image_selectors = Column(JSON, nullable=True)
 
     # Rate limiting
-    rate_limit_seconds = Column(Integer, default=5)
+    rate_limit_seconds = Column(Float, default=1.0)
     max_retries = Column(Integer, default=3)
 
     # Status

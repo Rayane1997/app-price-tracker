@@ -496,6 +496,8 @@ The system will automatically:
 - Start tracking price changes
 - Create alerts when price drops below target
 
+> **Note:** When creating products via the API, the backend automatically derives and normalizes the `domain` from the provided URL, so you only need to send `name` and `url` (plus any optional fields).
+
 ### Setting Target Prices
 
 **Update existing product:**
