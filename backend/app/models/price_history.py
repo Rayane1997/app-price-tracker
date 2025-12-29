@@ -9,8 +9,8 @@ class PriceHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
 
-    # Price data
-    price = Column(Float, nullable=False)
+    # Price data (nullable to handle failed scraping attempts)
+    price = Column(Float, nullable=True)
     currency = Column(String(3), default="EUR")
     is_promo = Column(Boolean, default=False)
     promo_percentage = Column(Float, nullable=True)

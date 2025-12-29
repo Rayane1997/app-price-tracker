@@ -10,6 +10,7 @@ from ..models.product import Product, ProductStatus
 from ..models.price_history import PriceHistory
 from ..parsers.engine import parser_engine
 from ..parsers.base import ParserError
+from ..utils.alert_generator import check_and_create_alerts
 import time
 
 logger = logging.getLogger(__name__)
@@ -124,10 +125,32 @@ def track_product_price(self, product_id: int):
 
         db.commit()
 
+        # Generate alerts based on price changes (after commit to ensure data is saved)
+        alerts_created = []
+        try:
+            alerts_created = check_and_create_alerts(
+                db=db,
+                product=product,
+                new_price=product_data.price,
+                is_promo=product_data.is_promo or False
+            )
+            if alerts_created:
+                logger.info(
+                    f"Created {len(alerts_created)} alert(s) for product {product_id}: "
+                    f"{[alert.type.value for alert in alerts_created]}"
+                )
+        except Exception as alert_error:
+            # Don't fail the task if alert creation fails
+            logger.error(
+                f"Failed to create alerts for product {product_id}: {alert_error}",
+                exc_info=True
+            )
+
         logger.info(
             f"Successfully tracked product {product_id}: "
             f"price={product_data.price} {product_data.currency}, "
-            f"duration={scrape_duration_ms}ms"
+            f"duration={scrape_duration_ms}ms, "
+            f"alerts_created={len(alerts_created)}"
         )
 
         return {
@@ -136,15 +159,18 @@ def track_product_price(self, product_id: int):
             "price": product_data.price,
             "currency": product_data.currency,
             "duration_ms": scrape_duration_ms,
+            "alerts_created": len(alerts_created),
         }
 
     except ParserError as e:
         # Parser-specific error
+        db.rollback()  # Rollback any uncommitted changes before error handling
         logger.error(f"Parser error for product {product_id}: {e}")
         return _handle_tracking_error(db, product, str(e))
 
     except Exception as e:
         # General error
+        db.rollback()  # Rollback any uncommitted changes before error handling
         logger.error(f"Unexpected error tracking product {product_id}: {e}", exc_info=True)
         return _handle_tracking_error(db, product, str(e))
 

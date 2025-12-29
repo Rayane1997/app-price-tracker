@@ -10,6 +10,15 @@ from ..schemas.product import (
     ProductList,
     ProductStatus,
 )
+from ..schemas.promo import (
+    PromoStatusResponse,
+    PromoHistoryResponse,
+    PromoPeriod,
+)
+from ..utils.promo_detector import (
+    get_current_promo_status,
+    get_promo_history,
+)
 import math
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -96,3 +105,72 @@ def delete_product(
     if not success:
         raise HTTPException(status_code=404, detail="Product not found")
     return None
+
+@router.get("/{product_id}/promo-status", response_model=PromoStatusResponse)
+def get_product_promo_status(
+    product_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Get current promotional status for a product.
+
+    Returns the latest promotional information including:
+    - Whether the product is currently on promotion
+    - The promotional discount percentage
+    - Current price and currency
+    - Last price check timestamp
+    """
+    # Check if product exists
+    product = crud.get_product(db, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Get promo status
+    promo_status = get_current_promo_status(db, product_id)
+    if promo_status is None:
+        # Product exists but has no price history yet
+        return PromoStatusResponse(
+            is_promo=False,
+            promo_percentage=None,
+            current_price=None,
+            currency=product.currency,
+            last_checked=None,
+        )
+
+    return PromoStatusResponse(**promo_status)
+
+@router.get("/{product_id}/promo-history", response_model=PromoHistoryResponse)
+def get_product_promo_history(
+    product_id: int,
+    days: int = Query(30, ge=1, le=365, description="Number of days to look back (1-365)"),
+    db: Session = Depends(get_db),
+):
+    """
+    Get promotional history for a product.
+
+    Returns a list of all promotional periods within the specified timeframe.
+    Each period includes start/end dates, discount percentage, price statistics,
+    and duration.
+
+    Query Parameters:
+    - days: Number of days to look back (default: 30, max: 365)
+    """
+    # Check if product exists
+    product = crud.get_product(db, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Get promo history
+    periods = get_promo_history(db, product_id, days)
+
+    # Calculate total promo days
+    total_promo_days = sum(period['duration_days'] for period in periods)
+
+    # Convert to PromoPeriod objects
+    promo_periods = [PromoPeriod(**period) for period in periods]
+
+    return PromoHistoryResponse(
+        periods=promo_periods,
+        total_promo_days=total_promo_days,
+        days_requested=days,
+    )

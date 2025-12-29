@@ -58,8 +58,11 @@ def create_product(db: Session, product: ProductCreate) -> Product:
     # Extract domain from URL
     domain = extract_domain(product.url)
 
+    # If name is not provided, use a temporary name based on domain
+    name = product.name if product.name else f"Product from {domain}"
+
     db_product = Product(
-        name=product.name,
+        name=name,
         url=product.url,
         domain=domain,
         target_price=product.target_price,

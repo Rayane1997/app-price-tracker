@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import get_settings
-from .api import products_router
+from .api import products_router, price_history_router, alerts_router
 from .api.parser_configs import router as parser_configs_router
 
 settings = get_settings()
@@ -23,6 +23,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(products_router, prefix=settings.API_PREFIX)
+app.include_router(price_history_router, prefix=settings.API_PREFIX)
+app.include_router(alerts_router, prefix=settings.API_PREFIX)
 app.include_router(parser_configs_router, prefix=settings.API_PREFIX)
 
 @app.get("/health")
