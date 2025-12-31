@@ -1,7 +1,8 @@
-from pydantic import BaseModel, HttpUrl, Field, field_validator
+from pydantic import BaseModel, HttpUrl, Field, field_validator, model_validator
 from typing import Optional
 from datetime import datetime
 from enum import Enum
+from urllib.parse import urlparse
 
 class ProductStatus(str, Enum):
     ACTIVE = "active"
@@ -24,7 +25,7 @@ class ProductBase(BaseModel):
 class ProductCreate(BaseModel):
     url: str = Field(..., description="Product URL")
     domain: str = Field(..., min_length=1, max_length=255, description="Domain (e.g., amazon.fr)")
-    name: Optional[str] = Field(None, min_length=1, max_length=500, description="Product name (auto-fetched if not provided)")
+    name: str = Field(..., min_length=1, max_length=500, description="Product name")
     target_price: Optional[float] = Field(None, ge=0, description="Target price for alerts")
     image_url: Optional[str] = Field(None, description="Product image URL")
     check_frequency_hours: int = Field(24, ge=1, le=168, description="Check frequency in hours (1-168)")
@@ -43,6 +44,45 @@ class ProductCreate(BaseModel):
     def validate_domain(cls, v: str) -> str:
         # Extract domain from URL if needed
         return v.lower().strip()
+
+
+class ProductCreateRequest(BaseModel):
+    """Request payload schema that allows autodetecting the domain."""
+
+    name: str = Field(..., min_length=1, max_length=500, description="Product name")
+    url: str = Field(..., description="Product URL")
+    domain: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=255,
+        description="Domain (optional, auto-detected from URL when omitted)",
+    )
+    target_price: Optional[float] = Field(None, ge=0, description="Target price for alerts")
+    image_url: Optional[str] = Field(None, description="Product image URL")
+    check_frequency_hours: int = Field(24, ge=1, le=168, description="Check frequency in hours (1-168)")
+    tags: Optional[str] = Field(None, max_length=500, description="Comma-separated tags")
+    notes: Optional[str] = Field(None, description="User notes")
+
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if not v.startswith(('http://', 'https://')):
+            raise ValueError('URL must start with http:// or https://')
+        return v
+
+    @model_validator(mode="after")
+    def ensure_domain(self) -> "ProductCreateRequest":
+        if not self.domain and self.url:
+            parsed = urlparse(self.url)
+            domain = parsed.netloc or parsed.path
+            if domain.startswith("www."):
+                domain = domain[4:]
+            if not domain:
+                raise ValueError("Unable to extract domain from URL")
+            self.domain = domain.lower()
+        elif self.domain:
+            self.domain = self.domain.lower().strip()
+        return self
 
 # Mise à jour de produit (tous les champs optionnels)
 class ProductUpdate(BaseModel):

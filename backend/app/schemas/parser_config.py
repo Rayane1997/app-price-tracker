@@ -1,17 +1,17 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, List
 from datetime import datetime
 
 
 class ParserConfigBase(BaseModel):
     """Base schema for ParserConfig"""
     domain: str = Field(..., min_length=1, max_length=255, description="Domain (e.g., amazon.fr)")
-    price_selectors: Dict[str, Any] = Field(..., description="Price CSS selectors (JSON)")
-    name_selectors: Optional[Dict[str, Any]] = Field(None, description="Name CSS selectors (JSON)")
-    image_selectors: Optional[Dict[str, Any]] = Field(None, description="Image CSS selectors (JSON)")
+    price_selectors: List[str] = Field(..., min_length=1, description="Ordered price CSS selectors")
+    name_selectors: Optional[List[str]] = Field(None, description="Name CSS selectors")
+    image_selectors: Optional[List[str]] = Field(None, description="Image CSS selectors")
     use_playwright: bool = Field(False, description="Use Playwright for JavaScript rendering")
     domain_pattern: Optional[str] = Field(None, max_length=500, description="Regex pattern for domain")
-    rate_limit_seconds: int = Field(5, ge=1, description="Rate limit in seconds")
+    rate_limit_seconds: float = Field(1.0, gt=0, description="Rate limit in seconds")
     max_retries: int = Field(3, ge=0, description="Maximum retries")
     is_active: bool = Field(True, description="Is configuration active")
 
@@ -24,12 +24,12 @@ class ParserConfigCreate(ParserConfigBase):
 class ParserConfigUpdate(BaseModel):
     """Schema for updating ParserConfig (all fields optional)"""
     domain: Optional[str] = Field(None, min_length=1, max_length=255)
-    price_selectors: Optional[Dict[str, Any]] = None
-    name_selectors: Optional[Dict[str, Any]] = None
-    image_selectors: Optional[Dict[str, Any]] = None
+    price_selectors: Optional[List[str]] = None
+    name_selectors: Optional[List[str]] = None
+    image_selectors: Optional[List[str]] = None
     use_playwright: Optional[bool] = None
     domain_pattern: Optional[str] = Field(None, max_length=500)
-    rate_limit_seconds: Optional[int] = Field(None, ge=1)
+    rate_limit_seconds: Optional[float] = Field(None, gt=0)
     max_retries: Optional[int] = Field(None, ge=0)
     is_active: Optional[bool] = None
 
@@ -38,12 +38,12 @@ class ParserConfigResponse(BaseModel):
     """Complete ParserConfig response"""
     id: int
     domain: str
-    price_selectors: Dict[str, Any]
-    name_selectors: Optional[Dict[str, Any]] = None
-    image_selectors: Optional[Dict[str, Any]] = None
+    price_selectors: List[str]
+    name_selectors: Optional[List[str]] = None
+    image_selectors: Optional[List[str]] = None
     use_playwright: bool
     domain_pattern: Optional[str] = None
-    rate_limit_seconds: int
+    rate_limit_seconds: float
     max_retries: int
     is_active: bool
     error_count: int

@@ -484,6 +484,8 @@ curl -X POST http://localhost:8001/api/v1/products/ \
   }'
 ```
 
+> **Note:** When creating products via the API, the backend automatically derives and normalizes the `domain` from the provided URL, so you only need to send `name` and `url` (plus any optional fields).
+
 **Via Frontend:**
 1. Navigate to http://localhost:5173
 2. Click "Add Product" button

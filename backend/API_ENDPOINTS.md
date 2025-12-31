@@ -54,12 +54,11 @@ Base URL: `http://localhost:8000/api/v1`
 ### 4. Create Product
 **POST** `/api/v1/products/`
 
-**Request Body:** `ProductCreate` schema
+**Request Body:** `ProductCreateRequest` schema
 ```json
 {
   "name": "Product name",
   "url": "https://amazon.fr/product/...",
-  "domain": "amazon.fr",
   "target_price": 39.99,
   "image_url": "https://...",
   "check_frequency_hours": 24,
@@ -72,8 +71,9 @@ Base URL: `http://localhost:8000/api/v1`
 
 **Validations:**
 - URL must start with `http://` or `https://`
-- Domain is extracted automatically from URL
-- `name`: 1-500 characters
+- Domain is automatically extracted from the URL when omitted and normalized (lowercase, `www.` removed)
+- `name`: 1-500 characters (required)
+- `domain`: optional, auto-detected if not provided
 - `target_price`: >= 0
 - `check_frequency_hours`: 1-168 (1 week max)
 - `tags`: max 500 characters
@@ -123,8 +123,8 @@ Base URL: `http://localhost:8000/api/v1`
 ```
 
 ## Notes
-- Domain is automatically extracted from URL when creating/updating
-- Domain prefix `www.` is automatically removed
+- Domain is automatically extracted from URL when omitted and normalized (lowercase, `www.` removed)
+- When creating products, the `domain` field is optional - it will be auto-detected from the URL
 - Pagination calculates `total_pages` automatically
 - All timestamps in UTC
 - Frontend can access via CORS from `http://localhost:5173`

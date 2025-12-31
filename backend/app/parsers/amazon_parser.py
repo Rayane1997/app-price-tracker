@@ -10,14 +10,14 @@ logger = logging.getLogger(__name__)
 
 class AmazonParser(BaseParser):
     """
-    Parser for Amazon.fr and Amazon.be
+    Parser for Amazon domains (FR/BE variants)
 
     Requires Playwright due to JavaScript rendering
     """
 
     @property
     def supported_domains(self) -> list[str]:
-        return ['amazon.fr', 'amazon.be']
+        return ['amazon.fr', 'amazon.be', 'amazon.com.be']
 
     @property
     def requires_javascript(self) -> bool:
