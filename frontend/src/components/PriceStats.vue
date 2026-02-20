@@ -5,7 +5,7 @@
       <div class="stat-card bg-white rounded-lg shadow-md p-6 col-span-2 md:col-span-1">
         <div class="text-sm text-gray-600 mb-2">Current Price</div>
         <div class="text-3xl font-bold text-gray-900">
-          {{ formatPrice(stats.current_price) }}
+          {{ formatPrice(stats.current_price, currency) }}
         </div>
       </div>
 
@@ -14,7 +14,7 @@
         <div class="text-sm text-gray-600 mb-2">Lowest Price</div>
         <div class="flex items-center">
           <div class="text-2xl font-bold text-green-600">
-            {{ formatPrice(stats.lowest_price) }}
+            {{ formatPrice(stats.lowest_price, currency) }}
           </div>
           <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
             BEST
@@ -27,7 +27,7 @@
         <div class="text-sm text-gray-600 mb-2">Highest Price</div>
         <div class="flex items-center">
           <div class="text-2xl font-bold text-red-600">
-            {{ formatPrice(stats.highest_price) }}
+            {{ formatPrice(stats.highest_price, currency) }}
           </div>
           <span class="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded">
             PEAK
@@ -39,7 +39,7 @@
       <div class="stat-card bg-white rounded-lg shadow-md p-6">
         <div class="text-sm text-gray-600 mb-2">Average Price</div>
         <div class="text-2xl font-bold text-gray-700">
-          {{ formatPrice(stats.average_price) }}
+          {{ formatPrice(stats.average_price, currency) }}
         </div>
       </div>
 
@@ -125,6 +125,11 @@ const props = defineProps({
       total_checks: 0,
       last_updated: null
     })
+  },
+  // Currency code for price formatting
+  currency: {
+    type: String,
+    default: 'EUR'
   }
 })
 

@@ -75,6 +75,7 @@
         <PriceStats
           v-if="priceHistoryStore.stats"
           :stats="priceHistoryStore.stats"
+          :currency="priceHistoryStore.product?.currency || 'EUR'"
         />
 
         <!-- Price Chart -->
@@ -82,6 +83,7 @@
           v-if="chartData"
           :chart-data="chartData"
           :period="priceHistoryStore.currentPeriod"
+          :currency="priceHistoryStore.product?.currency || 'EUR'"
         />
       </div>
     </div>

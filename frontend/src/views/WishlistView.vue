@@ -88,7 +88,7 @@ const handleCloseForm = () => {
   editingProduct.value = null
 }
 
-const handleSaveProduct = async (productData) => {
+const handleSaveProduct = async (productData, resolve, reject) => {
   try {
     if (editingProduct.value) {
       // Update existing product
@@ -98,14 +98,19 @@ const handleSaveProduct = async (productData) => {
       await productsStore.addProduct(productData)
     }
 
+    // Refresh domains in case a new domain was added
+    await productsStore.fetchDomains()
+
     // Close form on success
     handleCloseForm()
 
-    // Refresh domains in case a new domain was added
-    await productsStore.fetchDomains()
+    // Resolve the Promise to signal success to ProductForm
+    resolve()
   } catch (error) {
     // Error is already handled by the store
     console.error('Error saving product:', error)
+    // Reject the Promise to signal failure to ProductForm
+    reject(error)
   }
 }
 

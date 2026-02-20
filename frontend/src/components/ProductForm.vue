@@ -56,7 +56,7 @@
           <!-- Target Price Field -->
           <div>
             <label for="target_price" class="block text-sm font-medium text-gray-700 mb-1">
-              Target Price ($)
+              Target Price
             </label>
             <input
               id="target_price"
@@ -158,6 +158,8 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'close'])
 
+// Define save callback signature with resolve/reject for Promise-based pattern
+
 // Form data
 const formData = ref({
   url: '',
@@ -253,10 +255,13 @@ const handleSubmit = async () => {
       dataToSave.target_price = formData.value.target_price
     }
 
-    emit('save', dataToSave)
+    // Use Promise-based pattern to wait for API response
+    await new Promise((resolve, reject) => {
+      emit('save', dataToSave, resolve, reject)
+    })
   } catch (error) {
-    errorMessage.value = error.message || 'Failed to save product'
-  } finally {
+    // Display error with priority: axios response detail > error message > fallback
+    errorMessage.value = error.response?.data?.detail || error.message || 'Failed to save product'
     loading.value = false
   }
 }

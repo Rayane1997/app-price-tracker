@@ -5,10 +5,10 @@
 /**
  * Format price with currency symbol
  * @param {number|null} price - Price value
- * @param {string} currency - Currency code (default: 'USD')
+ * @param {string} currency - Currency code (default: 'EUR')
  * @returns {string} Formatted price string
  */
-export function formatPrice(price, currency = 'USD') {
+export function formatPrice(price, currency = 'EUR') {
   if (price === null || price === undefined) {
     return 'N/A'
   }
@@ -145,9 +145,9 @@ export function formatPercentage(value) {
  * Format currency with proper symbols and formatting
  * Alias for formatPrice for consistency
  * @param {number|null} price - Price value
- * @param {string} currency - Currency code (default: 'USD')
+ * @param {string} currency - Currency code (default: 'EUR')
  * @returns {string} Formatted price string
  */
-export function formatCurrency(price, currency = 'USD') {
+export function formatCurrency(price, currency = 'EUR') {
   return formatPrice(price, currency)
 }

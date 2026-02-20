@@ -72,6 +72,11 @@ const props = defineProps({
   period: {
     type: String,
     default: 'all'
+  },
+  // Currency code for price formatting
+  currency: {
+    type: String,
+    default: 'EUR'
   }
 })
 
@@ -188,7 +193,7 @@ const chartOptions = computed(() => ({
             return 'Price: N/A (Failed check)'
           }
 
-          const priceLabel = `Price: ${formatPrice(price)}`
+          const priceLabel = `Price: ${formatPrice(price, props.currency)}`
           const promoLabel = isPromo ? ' (PROMO)' : ''
 
           return priceLabel + promoLabel
@@ -225,7 +230,7 @@ const chartOptions = computed(() => ({
       display: true,
       title: {
         display: true,
-        text: 'Price ($)',
+        text: `Price (${props.currency})`,
         font: {
           size: 14,
           weight: 'bold',
@@ -238,7 +243,7 @@ const chartOptions = computed(() => ({
         drawBorder: false
       },
       ticks: {
-        callback: (value) => formatPrice(value),
+        callback: (value) => formatPrice(value, props.currency),
         font: {
           size: 11
         }
